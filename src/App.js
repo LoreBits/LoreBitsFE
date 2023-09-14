@@ -4,12 +4,20 @@ import LoreDisplay from './LoreDisplay';
 
 function App() {
     const [code, setCode] = useState('');
-    const [fetchTrigger, setFetchTrigger] = useState(false);
+    const [lores, setLores] = useState([]);
+    const [displayIndex, setDisplayIndex] = useState(0);
+
+
+    const shuffle = arr => arr.sort(() => Math.random() - 0.5)
 
     const handleCodeSubmit = (newCode) => {
         setCode(newCode);
-        setFetchTrigger(prev => !prev);  // Toggle the fetchTrigger
+        fetch(`http://127.0.0.1:8000/settings/${code}`)
+        .then(response => response.json())
+        .then(data => setLores(shuffle(data.lores)))
+        .catch(error => console.error("Error fetching data:", error));
     };
+    
 
     return (
         <div className="App">
@@ -18,7 +26,7 @@ function App() {
                 onCodeChange={setCode} 
                 onSubmitCode={handleCodeSubmit} 
             />
-            <LoreDisplay code={code} fetchTrigger={fetchTrigger} />
+            <LoreDisplay lores={lores} displayIndex={displayIndex} setDisplayIndex={setDisplayIndex} />
         </div>
     );
 }
