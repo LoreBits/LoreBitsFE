@@ -4,7 +4,7 @@ function LoreDisplay({ lores, displayIndex, setDisplayIndex }) {
     const [animationPhase, setAnimationPhase] = useState('idle'); // 'idle', 'exiting', 'entering'
     const [displayedText, setDisplayedText] = useState('');
     
-    const animation_duration = 1000  // Assuming the enter animation duration is 1s
+    const animation_duration = 1000  // the enter animation duration is 1s
 
     useEffect(() => {
         if (lores.length > 0) {
