@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import SettingPicker from './SettingPicker';
 import LoreDisplay from './LoreDisplay';
 
@@ -9,11 +9,9 @@ function App() {
     const [code, setCode] = useState('');
     const [lores, setLores] = useState([]);
     const [displayIndex, setDisplayIndex] = useState(0);
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
     const [isLogged, setIsLogged] = useState(false);
 
-    const handleLogin = (email, password) => {
+    const handleLogin = useCallback((email, password) => {
         fetch(`${apiUrl}/api/token/`, 
             {
                 headers: {'Content-Type': 'application/json'},
@@ -31,7 +29,23 @@ function App() {
             setIsLogged(true)
         })
         .catch(error => console.error("Error fetching data:", error));
-    }
+    }, []);
+
+    const handleRegistration = useCallback((registerEmail, registerPassword) => {
+        fetch(`${apiUrl}/create-user/`, 
+        {
+            headers: {'Content-Type': 'application/json'},
+            method: "POST", 
+            body: JSON.stringify({
+                email: registerEmail,
+                password: registerPassword
+            })
+        }
+    )
+    .then(response => response.json())
+    .catch(error => console.error("Error fetching data:", error));
+}, []);
+    
 
     const shuffle = arr => arr.sort(() => Math.random() - 0.5)
 
@@ -56,11 +70,17 @@ function App() {
         .catch(error => console.error("Error refreshing token:", error));
     };
 
-    const handleCodeSubmit = (newCode, retry=true, tokenToUse=localStorage.getItem("refreshToken")) => {
+    const handleCodeSubmit = (newCode, retry=true, tokenToUse=localStorage.getItem("accessToken")) => {
         setCode(newCode);
-        fetch(`${apiUrl}/settings/${code}`, {headers: new Headers({
-            Authorization: `Bearer ${tokenToUse}`,
-        })})
+        let headers;
+        if (tokenToUse) {
+            headers = new Headers({
+                Authorization: `Bearer ${tokenToUse}`,
+            })
+        } else {
+            headers = new Headers()
+        }
+        fetch(`${apiUrl}/settings/${code}`, {headers: headers})
         .then(response => {
             if (!response.ok && response.status === 401) {
                 if (retry) {
@@ -81,46 +101,57 @@ function App() {
 
     return (
         <div className="App">
-            { isLogged ? ( <SettingPicker
+            <SettingPicker
                 code={code}
                 onCodeChange={setCode}
                 onSubmitCode={handleCodeSubmit}
             />
+        { isLogged ? ( <></> 
             ) : (
-                <LoginButton
-                email={email}
-                setEmail={setEmail}
-                password={password}
-                setPassword={setPassword}
-                handleLogin={handleLogin}
+                <UserDataForm
+                handleFunction={handleLogin}
+                isRegistration={false}
             /> )}
             <LoreDisplay
                 lores={lores}
                 displayIndex={displayIndex}
                 setDisplayIndex={setDisplayIndex}
             />
+            { isLogged ? ( <></> 
+            ) : (
+            <UserDataForm
+                handleFunction={handleRegistration}
+                isRegistration={true}
+            />
+            )}
         </div>
     );
-}
 
-function LoginButton ({handleLogin, email, setEmail, password, setPassword}) {
+function UserDataForm ({handleFunction, isRegistration}) {
+    const email = useRef('');
+    const password = useRef('');
     const handleSubmit = (e) => {
         e.preventDefault();
-        handleLogin(email, password);
+        handleFunction(email.current, password.current);
     };
+    const className = isRegistration ? "registrationForm" : "loginForm"
+    const buttonText = isRegistration ? "sign up" : "sign in" 
     
-    return <div><form onSubmit={handleSubmit}  className="settingPickerForm">
+    return <div><form onSubmit={handleSubmit} className={className}>
     <input 
-        type="text" 
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        name="email">
-    </input>
-    <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} name="password">
-    </input>
-    <button type="submit" className="settingPickerButton">sign in</button>
+                    type="text" 
+                    onChange={(e) => email.current = e.target.value}
+                    name="email">
+                </input>
+                <input 
+                    type="password" 
+                    onChange={(e) => password.current = e.target.value}
+                    name="password">
+                </input>
+    <button type="submit" className="settingPickerButton">{buttonText}</button>
     </form>
     </div>
+}
 }
 
 export default App;
