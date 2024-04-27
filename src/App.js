@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import SettingPicker from './SettingPicker';
 import LoreDisplay from './LoreDisplay';
 
@@ -45,7 +45,35 @@ function App() {
     .then(response => response.json())
     .catch(error => console.error("Error fetching data:", error));
 }, []);
-    
+    const createSetting = useCallback((settingTitle) => {
+    fetch(`${apiUrl}/settings/`, 
+    {
+        headers: {'Content-Type': 'application/json' ,'Authorization':`Bearer ${localStorage.getItem("accessToken")}`  },
+        method: "POST", 
+        body: JSON.stringify({
+            title: settingTitle
+        })
+    }
+)
+.then(response => response.json())
+.catch(error => console.error("Error fetching data:", error));
+}, []);
+
+const createLore = useCallback((content, settingID) => {
+    fetch(`${apiUrl}/lores/`, 
+    {
+        headers: {'Content-Type': 'application/json' ,'Authorization':`Bearer ${localStorage.getItem("accessToken")}`  },
+        method: "POST", 
+        body: JSON.stringify({
+            content: content,
+            setting: settingID
+        })
+    }
+)
+.then(response => response.json())
+.catch(error => console.error("Error fetching data:", error));
+}, []);
+
 
     const shuffle = arr => arr.sort(() => Math.random() - 0.5)
 
@@ -124,6 +152,18 @@ function App() {
                 isRegistration={true}
             />
             )}
+           { isLogged ? (             
+           <SettingCreationForm handleFunction={createSetting}
+            />
+            ) : (
+            <></> 
+            )}
+           { isLogged ? (             
+           <LoreCreationForm handleFunction={createLore}
+            />
+            ) : (
+            <></> 
+            )}
         </div>
     );
 
@@ -152,6 +192,78 @@ function UserDataForm ({handleFunction, isRegistration}) {
     </form>
     </div>
 }
+function SettingCreationForm ({handleFunction}) {
+    const title = useRef('');
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        handleFunction(title.current);
+    };
+
+    return <div><form onSubmit={handleSubmit} className="settingCreation">
+    <input 
+                    type="text" 
+                    onChange={(e) => title.current = e.target.value}
+                    name="title">
+                </input>
+    <button type="submit" className="settingPickerButton">Add Setting</button>
+    </form>
+    </div>
 }
+
+function LoreCreationForm ({handleFunction}) {
+    const content = useRef('');
+    const settingID = useRef('');
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        console.log(content.current, settingID.current)
+        handleFunction(content.current, settingID.current);
+    };
+    const [models, setModels] = useState([]);
+
+    // Fetch the models from the API when the component mounts
+    useEffect(() => {
+        // Correcting the API call placement and structure
+        const fetchData = async () => {
+            try {
+                const response = await fetch(`${apiUrl}/settings/`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem("accessToken") }`
+                    },
+                    method: "GET"
+                });
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.json();
+                setModels(data); // Assuming the API returns an array of models
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            }
+        };
+
+        fetchData();
+    }, []); // Using useEffect to handle side effects like fetching data
+
+    return <div><form onSubmit={handleSubmit} className="loreCreation">
+            <select id="model-dropdown" name="settingID" onChange={(e) => settingID.current = e.target.value}>
+                {models.map(model => (
+                    <option key={model.id} value={model.id}>
+                        {model.title} {/* Change `name` to whatever field you want to display */}
+                    </option>
+            ))}
+            </select>
+    <input 
+                    type="text" 
+                    onChange={(e) => content.current = e.target.value}
+                    name="content">
+                </input>    
+
+    <button type="submit" className="settingPickerButton">Add Lore</button>
+    </form>
+    </div>
+}
+}
+
 
 export default App;
