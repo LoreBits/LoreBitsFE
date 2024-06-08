@@ -218,9 +218,9 @@ function LoreCreationForm ({handleFunction}) {
         console.log(content.current, settingID.current)
         handleFunction(content.current, settingID.current);
     };
-    const [models, setModels] = useState([]);
+    const [settings, setSettings] = useState([]);
 
-    // Fetch the models from the API when the component mounts
+    // Fetch the setting from the API when the component mounts
     useEffect(() => {
         // Correcting the API call placement and structure
         const fetchData = async () => {
@@ -236,7 +236,8 @@ function LoreCreationForm ({handleFunction}) {
                     throw new Error('Network response was not ok');
                 }
                 const data = await response.json();
-                setModels(data); // Assuming the API returns an array of models
+                setSettings(data); // Assuming the API returns an array of setting
+                settingID.current = data[0].id;
             } catch (error) {
                 console.error("Error fetching data:", error);
             }
@@ -247,7 +248,7 @@ function LoreCreationForm ({handleFunction}) {
 
     return <div><form onSubmit={handleSubmit} className="loreCreation">
             <select id="model-dropdown" name="settingID" onChange={(e) => settingID.current = e.target.value}>
-                {models.map(model => (
+                {settings.map(model => (
                     <option key={model.id} value={model.id}>
                         {model.title} {/* Change `name` to whatever field you want to display */}
                     </option>
