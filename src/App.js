@@ -1,6 +1,4 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import SettingPicker from './SettingPicker';
-import LoreDisplay from './LoreDisplay';
 
 
 const apiUrl = 'http://127.0.0.1:8000'
@@ -10,6 +8,8 @@ function App() {
     const [lores, setLores] = useState([]);
     const [displayIndex, setDisplayIndex] = useState(0);
     const [isLogged, setIsLogged] = useState(false);
+    const settingRef = useRef();
+    const [settingID, setSettingID] = useState("");
 
     const handleLogin = useCallback((email, password) => {
         fetch(`${apiUrl}/api/token/`, 
@@ -123,16 +123,19 @@ const createLore = useCallback((content, settingID) => {
             }
             return response.json()
         })
-        .then(data => setLores(shuffle(data.lores)))
+        .then(data => shuffle(data.lores)).then( shuffledData => {setLores(shuffledData); console.log(shuffledData)})
         .catch(error => console.error("Error fetching data:", error));
     };
+
+    useEffect(() => {
+        if (settingID) {
+            handleCodeSubmit(settingID);
+        }
+    }, [settingID]);
 
     return (
         <div className="App">
             <SettingPicker
-                code={code}
-                onCodeChange={setCode}
-                onSubmitCode={handleCodeSubmit}
             />
         { isLogged ? ( <></> 
             ) : (
@@ -264,7 +267,108 @@ function LoreCreationForm ({handleFunction}) {
     </form>
     </div>
 }
+
+
+
+function SettingPicker() {
+
+    const handleFetchSetting = (event) => {
+        event.preventDefault();
+        const settingID = settingRef.current.value
+        setSettingID(settingID);
+      };
+    
+
+
+    return (
+
+        <form onSubmit={handleFetchSetting} className="settingPickerForm">
+            <label>
+                Setting code:
+                <input 
+                    type="text" 
+                    ref={settingRef} 
+                    className="settingPickerInput"
+                />
+            </label>
+            <button className="settingPickerButton" type="submit">
+                Go
+            </button>
+        </form>
+    );
 }
 
+function LoreDisplay({ lores, displayIndex, setDisplayIndex }) {
+    const [animationPhase, setAnimationPhase] = useState('idle'); // 'idle', 'exiting', 'entering'
+    const [displayedText, setDisplayedText] = useState('');
+    
+    const animation_duration = 1000  // the enter animation duration is 1s
+
+    useEffect(() => {
+        if (lores.length > 0) {
+            setDisplayedText(lores[0]?.content);
+            setAnimationPhase('entering');
+        }
+    }, [lores]);
+
+    useEffect(() => {
+        if (animationPhase === 'idle') {
+            setDisplayedText(lores[displayIndex]?.content);
+        }
+    }, [displayIndex, lores]);
+    
+    useEffect(() => {
+        if (animationPhase === 'idle') {
+            setDisplayedText(lores[displayIndex]?.content);
+        }
+    }, [displayIndex, lores]);
+
+    useEffect(() => {
+        if (animationPhase === 'exiting') {
+            const nextIndex = (displayIndex + 1) % lores.length;
+            let timer = setTimeout(() => {
+                setDisplayIndex(nextIndex);
+                setAnimationPhase('entering');
+                setDisplayedText(lores[nextIndex]?.content);
+            }, animation_duration);
+            return () => clearTimeout(timer);
+        }
+    }, [animationPhase, displayIndex, lores]);
+
+    useEffect(() => {
+        if (animationPhase === 'entering') {
+            const timer = setTimeout(() => {
+                setAnimationPhase('idle');
+            }, animation_duration);
+
+            return () => clearTimeout(timer);
+        }
+    }, [animationPhase]);
+
+    return (
+        <>
+        <div> {settingID} </div>
+        <div 
+            className="skyrimLoading"
+            onClick={() => {
+                if (animationPhase === 'idle') {
+                    setAnimationPhase('exiting');
+                }
+            }}
+        >
+            <p 
+                className={`skyrimText ${animationPhase}`} 
+            >
+                {displayedText}
+            </p>
+        </div>
+        </>
+    );
+}
+
+
+
+
+}
 
 export default App;
