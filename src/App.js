@@ -108,7 +108,7 @@ const createLore = useCallback((content, settingID) => {
         } else {
             headers = new Headers()
         }
-        fetch(`${apiUrl}/settings/${code}`, {headers: headers})
+        fetch(`${apiUrl}/settings/${newCode}`, {headers: headers})
         .then(response => {
             if (!response.ok && response.status === 401) {
                 if (retry) {
@@ -121,7 +121,9 @@ const createLore = useCallback((content, settingID) => {
                     throw new Error('Unable to refresh token');
                 }
             }
-            return response.json()
+            let responseJson = response.json()
+            console.log(responseJson)
+            return responseJson
         })
         .then(data => shuffle(data.lores)).then( shuffledData => {setLores(shuffledData); console.log(shuffledData)})
         .catch(error => console.error("Error fetching data:", error));
@@ -131,6 +133,7 @@ const createLore = useCallback((content, settingID) => {
         if (settingID) {
             handleCodeSubmit(settingID);
         }
+        else {setLores([])}
     }, [settingID]);
 
     return (
