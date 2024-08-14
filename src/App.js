@@ -7,7 +7,7 @@ function App() {
     const [code, setCode] = useState('');
     const [lores, setLores] = useState([]);
     const [displayIndex, setDisplayIndex] = useState(0);
-    const [isLogged, setIsLogged] = useState(false);
+    const [isLogged, setIsLogged] = useState(localStorage.getItem("isLogged"));
     const settingRef = useRef();
     const [settingID, setSettingID] = useState("");
 
@@ -26,6 +26,7 @@ function App() {
         .then(data => {
             localStorage.setItem("accessToken", data.access)
             localStorage.setItem("refreshToken", data.refresh)
+            localStorage.setItem("isLogged", true)
             setIsLogged(true)
         })
         .catch(error => console.error("Error fetching data:", error));
@@ -140,6 +141,7 @@ const createLore = useCallback((content, settingID) => {
         <div className="App">
             <SettingPicker
             />
+        { !isLogged ? (<></>) : (<Logout/>)}
         { isLogged ? ( <></> 
             ) : (
                 <UserDataForm
@@ -203,6 +205,7 @@ function SettingCreationForm ({handleFunction}) {
     const handleSubmit = (e) => {
         e.preventDefault();
         handleFunction(title.current);
+        title.current = ""
     };
 
     return <div><form onSubmit={handleSubmit} className="settingCreation">
@@ -223,6 +226,8 @@ function LoreCreationForm ({handleFunction}) {
         e.preventDefault();
         console.log(content.current, settingID.current)
         handleFunction(content.current, settingID.current);
+        content.current = ""
+        settingID.current = ""
     };
     const [settings, setSettings] = useState([]);
 
@@ -369,8 +374,26 @@ function LoreDisplay({ lores, displayIndex, setDisplayIndex }) {
     );
 }
 
+function Logout() {
+    const handleLogout = (event) => {
+        event.preventDefault();
+        localStorage.removeItem("accessToken")
+        localStorage.removeItem("refreshToken")
+        localStorage.setItem("isLogged", false)
+        setIsLogged(false)
+      };
+    
 
 
+    return (
+
+        <form onSubmit={handleLogout}>
+            <button className="settingPickerButton" type="submit">
+                Logout
+            </button>
+        </form>
+    );
+}
 
 }
 
