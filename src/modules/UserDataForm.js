@@ -6,7 +6,6 @@ function UserDataForm ({handleFunction, isRegistration, setIsLogged}) {
     const handleSubmit = (e) => {
         e.preventDefault();
         handleFunction(email.current, password.current);
-        setIsLogged(true)
     };
     const className = isRegistration ? "registrationForm" : "loginForm"
     const buttonText = isRegistration ? "sign up" : "sign in" 
