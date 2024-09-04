@@ -1,15 +1,15 @@
-import React, {useRef, useEffect} from 'react';
+import React, { useRef, useEffect } from 'react';
 
-const apiUrl = 'http://127.0.0.1:8000'
+const apiUrl = 'http://127.0.0.1:8000';
 
-function LoreCreationForm ({handleFunction, setSettings, settings}) {
+function LoreCreationForm({ handleFunction, setSettings, settings }) {
     const content = useRef('');
     const settingID = useRef('');
+
     const handleSubmit = (e) => {
         e.preventDefault();
-        console.log(content.current, settingID.current)
         handleFunction(content.current, settingID.current);
-        };
+    };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -17,7 +17,7 @@ function LoreCreationForm ({handleFunction, setSettings, settings}) {
                 const response = await fetch(`${apiUrl}/settings/`, {
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem("accessToken") }`
+                        'Authorization': `Bearer ${localStorage.getItem("accessToken")}`
                     },
                     method: "GET"
                 });
@@ -26,32 +26,48 @@ function LoreCreationForm ({handleFunction, setSettings, settings}) {
                 }
                 const data = await response.json();
                 setSettings(data);
-                settingID.current = data[0].id;
+                settingID.current = data[0]?.id || '';
             } catch (error) {
                 console.error("Error fetching data:", error);
             }
         };
 
         fetchData();
-    }, []); // Using useEffect to handle side effects like fetching data
+    }, [setSettings]);
 
-    return <div><form onSubmit={handleSubmit} className="loreCreation">
-            <select id="model-dropdown" name="settingID" onChange={(e) => settingID.current = e.target.value}>
-                {settings.map(model => (
-                    <option key={model.id} value={model.id}>
-                        {model.title}
-                    </option>
-            ))}
-            </select>
-            <input 
-                    type="text" 
-                    onChange={(e) => content.current = e.target.value}
-                    name="content">
-                </input>    
-
-    <button type="submit" className="settingPickerButton">Add Lore</button>
-    </form>
-    </div>
+    return (
+        <div className="p-4">
+            <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md">
+                <label className="block mb-2 text-sm font-bold">
+                    Select Setting
+                    <select 
+                        id="model-dropdown" 
+                        name="settingID" 
+                        className="block w-full mt-2 p-2 border rounded-md" 
+                        onChange={(e) => settingID.current = e.target.value}
+                    >
+                        {settings.map(model => (
+                            <option key={model.id} value={model.id}>
+                                {model.title}
+                            </option>
+                        ))}
+                    </select>
+                </label>
+                <label className="block mb-4 text-sm font-bold">
+                    Lore Content
+                    <input 
+                        type="text" 
+                        className="w-full mt-2 p-2 border rounded-md" 
+                        onChange={(e) => content.current = e.target.value} 
+                        name="content"
+                    />
+                </label>
+                <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    Add Lore
+                </button>
+            </form>
+        </div>
+    );
 }
 
 export default LoreCreationForm;

@@ -1,10 +1,10 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 
 function LoreDisplay({ lores, displayIndex, setDisplayIndex, settingID }) {
     const [animationPhase, setAnimationPhase] = useState('idle'); // 'idle', 'exiting', 'entering'
     const [displayedText, setDisplayedText] = useState('');
     
-    const animation_duration = 1000  // the enter animation duration is 1s
+    const animation_duration = 1000;  // Animacja trwa 1s
 
     useEffect(() => {
         if (lores.length > 0) {
@@ -13,12 +13,6 @@ function LoreDisplay({ lores, displayIndex, setDisplayIndex, settingID }) {
         }
     }, [lores]);
 
-    useEffect(() => {
-        if (animationPhase === 'idle') {
-            setDisplayedText(lores[displayIndex]?.content);
-        }
-    }, [displayIndex, lores]);
-    
     useEffect(() => {
         if (animationPhase === 'idle') {
             setDisplayedText(lores[displayIndex]?.content);
@@ -49,21 +43,27 @@ function LoreDisplay({ lores, displayIndex, setDisplayIndex, settingID }) {
 
     return (
         <>
-        <div> {settingID} </div>
-        <div 
-            className="skyrimLoading"
-            onClick={() => {
-                if (animationPhase === 'idle') {
-                    setAnimationPhase('exiting');
-                }
-            }}
-        >
-            <p 
-                className={`skyrimText ${animationPhase}`} 
+            <div>{settingID}</div>
+            <div 
+                className="flex justify-center items-center fixed bottom-10 left-1/2 transform -translate-x-1/2 w-5/6 h-3/5  bg-black text-white text-xl font-bold rounded-lg p-6 shadow-lg"
+                onClick={() => {
+                    if (animationPhase === 'idle') {
+                        setAnimationPhase('exiting');
+                    }
+                }}
             >
-                {displayedText}
-            </p>
-        </div>
+                <p 
+                    className={`${
+                        animationPhase === 'entering'
+                        ? 'animate-slideFromLeft'
+                        : animationPhase === 'exiting'
+                        ? 'animate-slideToRight'
+                        : ''
+                    }`}
+                >
+                    {displayedText}
+                </p>
+            </div>
         </>
     );
 }

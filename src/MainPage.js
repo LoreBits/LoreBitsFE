@@ -6,17 +6,15 @@ import SettingPicker from './modules/SettingPicker';
 import Logout from './modules/Logout';
 import UserDataForm from './modules/UserDataForm';
 
-const apiUrl = 'http://127.0.0.1:8000'
+const apiUrl = 'http://127.0.0.1:8000';
 
 function MainPage() {
     const [code, setCode] = useState('');
     const [lores, setLores] = useState([]);
     const [displayIndex, setDisplayIndex] = useState(0);
-    const [isLogged, setIsLogged] = useState(localStorage.getItem("isLogged"));
+    const [isLogged, setIsLogged] = useState(localStorage.getItem("isLogged") === "true");
     const [settingID, setSettingID] = useState("");
     const [settings, setSettings] = useState([]);
-
-    const apiUrl = 'http://127.0.0.1:8000'
 
     const handleLogin = useCallback((email, password) => {
         fetch(`${apiUrl}/api/token/`, 
@@ -31,14 +29,14 @@ function MainPage() {
         )
         .then(response => response.json())
         .then(data => {
-            localStorage.setItem("accessToken", data.access)
-            localStorage.setItem("refreshToken", data.refresh)
-            localStorage.setItem("isLogged", true)
-            setIsLogged(true)
+            localStorage.setItem("accessToken", data.access);
+            localStorage.setItem("refreshToken", data.refresh);
+            localStorage.setItem("isLogged", true);
+            setIsLogged(true);
         })
         .catch(error => console.error("Error fetching data:", error));
     }, []);
-    
+
     const handleRegistration = useCallback((registerEmail, registerPassword) => {
         fetch(`${apiUrl}/create-user/`, 
         {
@@ -48,12 +46,10 @@ function MainPage() {
                 email: registerEmail,
                 password: registerPassword
             })
-        }
-    )
-    .then(response => response.json())
-    .catch(error => console.error("Error fetching data:", error));
+        })
+        .then(response => response.json())
+        .catch(error => console.error("Error fetching data:", error));
     }, []);
-    
 
     const createSetting = useCallback((settingTitle) => {
         fetch(`${apiUrl}/settings/`, 
@@ -67,25 +63,24 @@ function MainPage() {
         )
         .then(response => response.json())
         .catch(error => console.error("Error fetching data:", error));
-        }, []);        
-    
-const createLore = useCallback((content, settingID) => {
-    fetch(`${apiUrl}/lores/`, 
-    {
-        headers: {'Content-Type': 'application/json' ,'Authorization':`Bearer ${localStorage.getItem("accessToken")}`  },
-        method: "POST", 
-        body: JSON.stringify({
-            content: content,
-            setting: settingID
-        })
-    }
-)
-.then(response => response.json())
-.catch(error => console.error("Error fetching data:", error));
-}, []);
+    }, []);        
 
+    const createLore = useCallback((content, settingID) => {
+        fetch(`${apiUrl}/lores/`, 
+        {
+            headers: {'Content-Type': 'application/json' ,'Authorization':`Bearer ${localStorage.getItem("accessToken")}`  },
+            method: "POST", 
+            body: JSON.stringify({
+                content: content,
+                setting: settingID
+            })
+        }
+    )
+    .then(response => response.json())
+    .catch(error => console.error("Error fetching data:", error));
+    }, []);
 
-    const shuffle = arr => arr.sort(() => Math.random() - 0.5)
+    const shuffle = arr => arr.sort(() => Math.random() - 0.5);
 
     const refreshAccessToken = () => {
         return fetch(`${apiUrl}/api/token/refresh/`, {
@@ -100,11 +95,10 @@ const createLore = useCallback((content, settingID) => {
             if (!data.access) {
                 throw new Error('No access token returned');
             }
-            localStorage.setItem("accessToken", data.access)
-            localStorage.setItem("refreshToken", data.refresh)
-            return data.access
-            }
-        )
+            localStorage.setItem("accessToken", data.access);
+            localStorage.setItem("refreshToken", data.refresh);
+            return data.access;
+        })
         .catch(error => console.error("Error refreshing token:", error));
     };
 
@@ -114,9 +108,9 @@ const createLore = useCallback((content, settingID) => {
         if (tokenToUse) {
             headers = new Headers({
                 Authorization: `Bearer ${tokenToUse}`,
-            })
+            });
         } else {
-            headers = new Headers()
+            headers = new Headers();
         }
         fetch(`${apiUrl}/settings/${newCode}`, {headers: headers})
         .then(response => {
@@ -126,69 +120,64 @@ const createLore = useCallback((content, settingID) => {
                         handleCodeSubmit(newCode, retry=false, tokenToUse=newToken)
                     );
                 } else {
-                    localStorage.removeItem("accessToken")
-                    localStorage.removeItem("refreshToken")
+                    localStorage.removeItem("accessToken");
+                    localStorage.removeItem("refreshToken");
                     throw new Error('Unable to refresh token');
                 }
             }
-            let responseJson = response.json()
-            console.log(responseJson)
-            return responseJson
+            return response.json();
         })
-        .then(data => shuffle(data.lores)).then( shuffledData => {setLores(shuffledData); console.log(shuffledData)})
+        .then(data => shuffle(data.lores))
+        .then(shuffledData => {
+            setLores(shuffledData);
+            console.log(shuffledData);
+        })
         .catch(error => console.error("Error fetching data:", error));
     };
 
     useEffect(() => {
         if (settingID) {
             handleCodeSubmit(settingID);
+        } else {
+            setLores([]);
         }
-        else {setLores([])}
     }, [settingID]);
 
     return (
-        <div className="App">
-            <SettingPicker
-            setSettingID={setSettingID}
-            />
-        { !isLogged ? (<></>) : (<Logout setIsLogged={setIsLogged}/>)}
-        { isLogged ? ( <></> 
+        <div className="min-h-screen bg-gray-100 p-6 flex flex-col items-center">
+            {/* Warunkowe wyświetlanie formularzy na podstawie stanu zalogowania */}
+            
+            {isLogged ? (
+                <>
+                    <div className="mt-4 flex flex-col md:flex-row gap-6">
+                        {/* Formularze dodawania ustawień i lore */}
+                        <SettingCreationForm handleFunction={createSetting} className="flex-1" />
+                        <LoreCreationForm handleFunction={createLore} setSettings={setSettings} settings={settings} className="flex-1" />
+                    </div>
+                    
+                    {/* Setting Picker i Logout */}
+                    <div className="flex justify-between items-center mt-4 mb-6 w-full max-w-4xl space-x-6">
+                        <SettingPicker setSettingID={setSettingID} />
+                        <Logout setIsLogged={setIsLogged} />
+                    </div>
+                </>
             ) : (
-                <UserDataForm
-                handleFunction={handleLogin}
-                setIsLogged={setIsLogged}
-                isRegistration={false}
-            /> )}
+                <div className="flex flex-col md:flex-row gap-6 justify-center mt-8">
+                    {/* Formularze logowania i rejestracji */}
+                    <UserDataForm handleFunction={handleLogin} isRegistration={false} setIsLogged={setIsLogged} />
+                    <UserDataForm handleFunction={handleRegistration} isRegistration={true} setIsLogged={setIsLogged} />
+                </div>
+            )}
+            
+            {/* LoreDisplay wyżej i większy */}
             <LoreDisplay
                 lores={lores}
                 displayIndex={displayIndex}
                 setDisplayIndex={setDisplayIndex}
+                className="fixed bottom-10 left-1/2 transform -translate-x-1/2 w-4/5 h-32 bg-black text-white text-center flex justify-center items-center rounded-lg p-6 shadow-lg"
             />
-            { isLogged ? ( <></> 
-            ) : (
-            <UserDataForm
-                handleFunction={handleRegistration}
-                setIsLogged={setIsLogged}
-                isRegistration={true}
-            />
-            )}
-           { isLogged ? (             
-           <SettingCreationForm handleFunction={createSetting}
-            />
-            ) : (
-            <></> 
-            )}
-           { isLogged ? (             
-           <LoreCreationForm handleFunction={createLore} setSettings={setSettings} settings={settings}
-            />
-            ) : (
-            <></> 
-            )}
         </div>
     );
-
-
-
 }
 
 export default MainPage;
