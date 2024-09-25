@@ -76,7 +76,8 @@ function MainPage() {
             })
         }
     )
-    .then(response => response.json())
+    .then(response => response.json()).
+    then(handleCodeSubmit(settingID))
     .catch(error => console.error("Error fetching data:", error));
     }, []);
 
@@ -103,6 +104,7 @@ function MainPage() {
     };
 
     const handleCodeSubmit = (newCode, retry=true, tokenToUse=localStorage.getItem("accessToken")) => {
+        console.log("ODPALAM handleCodeSubmit")
         setCode(newCode);
         let headers;
         if (tokenToUse) {
@@ -130,7 +132,7 @@ function MainPage() {
         .then(data => shuffle(data.lores))
         .then(shuffledData => {
             setLores(shuffledData);
-            console.log(shuffledData);
+            console.log(lores);
         })
         .catch(error => console.error("Error fetching data:", error));
     };
@@ -139,6 +141,7 @@ function MainPage() {
         if (settingID) {
             handleCodeSubmit(settingID);
         } else {
+            console.log("KASUJĘ LORY")
             setLores([]);
         }
     }, [settingID]);
@@ -147,17 +150,22 @@ function MainPage() {
         <div className="min-h-screen bg-gray-100 p-6 flex flex-col items-center">
             {/* Warunkowe wyświetlanie formularzy na podstawie stanu zalogowania */}
             
+
+            {/* Setting Picker i Logout */}
+            <div className="flex justify-between items-center mt-4 mb-6 w-full max-w-4xl space-x-6">
+                <SettingPicker setSettingID={setSettingID} />
+            </div>
+
             {isLogged ? (
                 <>
                     <div className="mt-4 flex flex-col md:flex-row gap-6">
                         {/* Formularze dodawania ustawień i lore */}
                         <SettingCreationForm handleFunction={createSetting} className="flex-1" />
-                        <LoreCreationForm handleFunction={createLore} setSettings={setSettings} settings={settings} className="flex-1" />
+                        <LoreCreationForm handleFunction={createLore} setSettings={setSettings} settings={settings} setLores={setLores} />
                     </div>
                     
-                    {/* Setting Picker i Logout */}
+                    {/* Logout */}
                     <div className="flex justify-between items-center mt-4 mb-6 w-full max-w-4xl space-x-6">
-                        <SettingPicker setSettingID={setSettingID} />
                         <Logout setIsLogged={setIsLogged} />
                     </div>
                 </>
@@ -168,13 +176,13 @@ function MainPage() {
                     <UserDataForm handleFunction={handleRegistration} isRegistration={true} setIsLogged={setIsLogged} />
                 </div>
             )}
+
             
             {/* LoreDisplay wyżej i większy */}
             <LoreDisplay
                 lores={lores}
                 displayIndex={displayIndex}
                 setDisplayIndex={setDisplayIndex}
-                className="fixed bottom-10 left-1/2 transform -translate-x-1/2 w-4/5 h-32 bg-black text-white text-center flex justify-center items-center rounded-lg p-6 shadow-lg"
             />
         </div>
     );

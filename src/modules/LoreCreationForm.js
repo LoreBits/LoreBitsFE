@@ -31,7 +31,6 @@ function LoreCreationForm({ handleFunction, setSettings, settings }) {
                 console.error("Error fetching data:", error);
             }
         };
-
         fetchData();
     }, [setSettings]);
 

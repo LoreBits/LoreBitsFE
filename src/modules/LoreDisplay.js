@@ -33,6 +33,7 @@ function LoreDisplay({ lores, displayIndex, setDisplayIndex, settingID }) {
 
     useEffect(() => {
         if (animationPhase === 'entering') {
+            console.log(lores)
             const timer = setTimeout(() => {
                 setAnimationPhase('idle');
             }, animation_duration);
@@ -45,7 +46,7 @@ function LoreDisplay({ lores, displayIndex, setDisplayIndex, settingID }) {
         <>
             <div>{settingID}</div>
             <div 
-                className="flex justify-center items-center fixed bottom-10 left-1/2 transform -translate-x-1/2 w-5/6 h-3/5  bg-black text-white text-xl font-bold rounded-lg p-6 shadow-lg"
+                className="flex justify-center items-center fixed bottom-10 left-1/2 transform -translate-x-1/2 w-5/6 h-1/3 bg-black text-white text-xl font-bold rounded-lg p-6 shadow-lg"
                 onClick={() => {
                     if (animationPhase === 'idle') {
                         setAnimationPhase('exiting');
